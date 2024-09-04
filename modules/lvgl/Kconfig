@@ -12,6 +12,9 @@ config LVGL
 
 if LVGL
 
+config LV_STDLIB_BUILTIN
+	bool
+
 config LV_USE_MONKEY
 	bool
 
