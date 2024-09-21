@@ -10,6 +10,7 @@
 #include "odroid_go-flash_partition_table.dtsi"
 #include <zephyr/dt-bindings/display/ili9xxx.h>
 #include <zephyr/dt-bindings/input/input-event-codes.h>
+#include <zephyr/dt-bindings/lvgl/lvgl.h>
 
 /* The ESP32 ADC uses an internal reference voltage of ~ 1.1 V. The joystick buttons pull the signal
  * to 3.3V and 3.3V/2 = 1.65V. To differentiate between them we need to use the maximum attenuation
@@ -43,7 +44,7 @@
 		};
 	};
 
-	gpio_keys {
+	buttons: gpio_keys {
 		compatible = "gpio-keys";
 		menu_button: menu_button {
 			label = "Menu";
@@ -77,6 +78,27 @@
 		};
 	};
 
+	lvgl_keypad_input_buttons {
+		compatible = "zephyr,lvgl-keypad-input";
+		input = <&buttons>;
+		input-codes = <
+		INPUT_KEY_MENU
+		INPUT_KEY_0
+		INPUT_BTN_SELECT
+		INPUT_BTN_START
+		INPUT_KEY_A
+		INPUT_KEY_B
+		>;
+		lvgl-codes = <
+		LV_KEY_HOME
+		LV_KEY_END
+		LV_KEY_PREV
+		LV_KEY_NEXT
+		LV_KEY_ENTER
+		LV_KEY_ESC
+		>;
+	};
+
 	joystick_up_down: adc_keys_joystick_up_down {
 		compatible = "adc-keys";
 		io-channels = <&adc0 7>;
@@ -96,6 +118,19 @@
 		};
 	};
 
+	lvgl_keypad_input_joystick_up_down {
+		compatible = "zephyr,lvgl-keypad-input";
+		input = <&joystick_up_down>;
+		input-codes = <
+		INPUT_KEY_UP
+		INPUT_KEY_DOWN
+		>;
+		lvgl-codes = <
+		LV_KEY_UP
+		LV_KEY_DOWN
+		>;
+	};
+
 	joystick_left_right: adc_keys_joystick_left_right {
 		compatible = "adc-keys";
 		io-channels = <&adc0 6>;
@@ -113,6 +148,19 @@
 			press-thresholds-mv = <ESP32_ADC_ATTEN_11DB_MV(3300/2)>;
 			zephyr,code = <INPUT_KEY_RIGHT>;
 		};
+	};
+
+	lvgl_keypad_input_joystick_left_right {
+		compatible = "zephyr,lvgl-keypad-input";
+		input = <&joystick_left_right>;
+		input-codes = <
+		INPUT_KEY_LEFT
+		INPUT_KEY_RIGHT
+		>;
+		lvgl-codes = <
+		LV_KEY_LEFT
+		LV_KEY_RIGHT
+		>;
 	};
 
 	lcd_backlight_en {
