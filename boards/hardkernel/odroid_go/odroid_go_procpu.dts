@@ -61,6 +61,11 @@
 			gpios = <&gpio0 27 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
 			zephyr,code = <INPUT_BTN_SELECT>;
 		};
+		start_button: start_button {
+			label = "Start";
+			gpios = <&gpio1 7 GPIO_ACTIVE_LOW>;
+			zephyr,code = <INPUT_BTN_START>;
+		};
 		a_button: a_button {
 			label = "A";
 			gpios = <&gpio1 0 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
@@ -70,11 +75,6 @@
 			label = "B";
 			gpios = <&gpio1 1 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
 			zephyr,code = <INPUT_KEY_B>;
-		};
-		start_button: start_button {
-			label = "Start";
-			gpios = <&gpio1 7 GPIO_ACTIVE_LOW>;
-			zephyr,code = <INPUT_BTN_START>;
 		};
 	};
 
