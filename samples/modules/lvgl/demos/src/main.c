@@ -23,7 +23,9 @@ int main(void)
 		return 0;
 	}
 
-#if defined(CONFIG_LV_USE_DEMO_MUSIC)
+#if defined(CONFIG_LV_USE_DEMO_KEYPAD_AND_ENCODER)
+	lv_demo_keypad_encoder();
+#elif defined(CONFIG_LV_USE_DEMO_MUSIC)
 	lv_demo_music();
 #elif defined(CONFIG_LV_USE_DEMO_BENCHMARK)
 	lv_demo_benchmark();

@@ -15,6 +15,10 @@ target_include_directories(app PRIVATE
     ${LVGL_DIR}/demos/
 )
 
+target_sources_ifdef(CONFIG_LV_USE_DEMO_KEYPAD_AND_ENCODER app PRIVATE
+    ${LVGL_DIR}/demos/keypad_encoder/lv_demo_keypad_encoder.c
+)
+
 target_sources_ifdef(CONFIG_LV_USE_DEMO_MUSIC app PRIVATE
     ${LVGL_DIR}/demos/music/lv_demo_music_list.c
     ${LVGL_DIR}/demos/music/lv_demo_music.c
