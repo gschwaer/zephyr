@@ -11,6 +11,16 @@
 #include <zephyr/dt-bindings/display/ili9xxx.h>
 #include <zephyr/dt-bindings/input/input-event-codes.h>
 
+/* The ESP32 ADC uses an internal reference voltage of ~ 1.1 V. The joystick buttons pull the signal
+ * to 3.3V and 3.3V/2 = 1.65V. To differentiate between them we need to use the maximum attenuation
+ * of 11 dB (ATTEN=3). We crop the values to the range specified in the ESP Hardware Design
+ * Guidelines for ATTEN=3 it's 150 mV ~ 2450 mV. See
+ * https://docs.espressif.com/projects/esp-hardware-design-guidelines/en/latest/esp32/schematic-checklist.html#adc */
+#define ESP32_ADC_ATTEN_11DB "ADC_GAIN_1_4"
+#define ESP32_ADC_ATTEN_11DB_MIN_MV 150
+#define ESP32_ADC_ATTEN_11DB_MAX_MV 2450
+#define ESP32_ADC_ATTEN_11DB_MV(val_mv) ((val_mv) > ESP32_ADC_ATTEN_11DB_MAX_MV ? ESP32_ADC_ATTEN_11DB_MAX_MV: ((val_mv) < ESP32_ADC_ATTEN_11DB_MIN_MV ? ESP32_ADC_ATTEN_11DB_MIN_MV: (val_mv)))
+
 / {
 	model = "ODROID-GO Game Kit PROCPU";
 	compatible = "hardkernel,odroid_go", "espressif,esp32";
@@ -67,6 +77,44 @@
 		};
 	};
 
+	joystick_up_down: adc_keys_joystick_up_down {
+		compatible = "adc-keys";
+		io-channels = <&adc0 7>;
+		/* Idle: Weak pull-down */
+		keyup-threshold-mv = <ESP32_ADC_ATTEN_11DB_MV(0)>;
+
+		/* Up: Strong pull-up */
+		up_button {
+			press-thresholds-mv = <ESP32_ADC_ATTEN_11DB_MV(3300)>;
+			zephyr,code = <INPUT_KEY_UP>;
+		};
+
+		/* Down: Weak pull-up (equal to pull-down): 1/2 V */
+		down_button {
+			press-thresholds-mv = <ESP32_ADC_ATTEN_11DB_MV(3300/2)>;
+			zephyr,code = <INPUT_KEY_DOWN>;
+		};
+	};
+
+	joystick_left_right: adc_keys_joystick_left_right {
+		compatible = "adc-keys";
+		io-channels = <&adc0 6>;
+		/* Idle: Weak pull-down */
+		keyup-threshold-mv = <ESP32_ADC_ATTEN_11DB_MV(0)>;
+
+		/* Left: Strong pull-up */
+		left_button {
+			press-thresholds-mv = <ESP32_ADC_ATTEN_11DB_MV(3300)>;
+			zephyr,code = <INPUT_KEY_LEFT>;
+		};
+
+		/* Right: Weak pull-up (equal to pull-down): 1/2 V */
+		right_button {
+			press-thresholds-mv = <ESP32_ADC_ATTEN_11DB_MV(3300/2)>;
+			zephyr,code = <INPUT_KEY_RIGHT>;
+		};
+	};
+
 	lcd_backlight_en {
 		compatible = "regulator-fixed";
 		regulator-name = "lcd_backlight_enable";
@@ -99,6 +147,28 @@
 			width = <320>;
 			height = <240>;
 		};
+	};
+};
+
+&adc0 {
+	status = "okay";
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	channel@6 {
+		reg = <0x6>;
+		zephyr,gain = ESP32_ADC_ATTEN_11DB;
+		zephyr,reference = "ADC_REF_INTERNAL";
+		zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+		zephyr,resolution = <12>;
+	};
+
+	channel@7 {
+		reg = <0x7>;
+		zephyr,gain = ESP32_ADC_ATTEN_11DB;
+		zephyr,reference = "ADC_REF_INTERNAL";
+		zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+		zephyr,resolution = <12>;
 	};
 };
 
