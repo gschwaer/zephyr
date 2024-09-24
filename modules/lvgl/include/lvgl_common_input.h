@@ -36,8 +36,9 @@ int lvgl_init_input_devices(void);
 #define LVGL_KEY_VALID(key)     IN_RANGE(key, 0, UINT8_MAX)
 
 #define LVGL_INPUT_DEFINE(inst, type, msgq_size, process_evt_cb)                                   \
-	INPUT_CALLBACK_DEFINE(LVGL_INPUT_DEVICE(inst), process_evt_cb,                             \
-			      (void *)DEVICE_DT_INST_GET(inst));                                   \
+	INPUT_CALLBACK_DEFINE_NAMED(LVGL_INPUT_DEVICE(inst), process_evt_cb,                       \
+				    (void *)DEVICE_DT_INST_GET(inst),                              \
+				    _input_callback__process_evt_cb__##inst);                      \
 	K_MSGQ_DEFINE(lvgl_input_msgq_##type##_##inst, sizeof(lv_indev_data_t), msgq_size, 4)
 
 #ifdef __cplusplus
