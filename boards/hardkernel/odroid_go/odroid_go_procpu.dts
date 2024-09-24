@@ -46,6 +46,11 @@
 
 	buttons: gpio_keys {
 		compatible = "gpio-keys";
+		/* It seems there is a hardware bug resulting in lost interrupts. It only happens when the
+		 * ADC is enabled. The effect is that the START button on IO39 gets stuck, because the
+		 * unpress interrupt is never received. Polling mode circumvents this bug. */
+		polling-mode;
+
 		menu_button: menu_button {
 			label = "Menu";
 			gpios = <&gpio0 13 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
