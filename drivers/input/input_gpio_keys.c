@@ -33,7 +33,6 @@ struct gpio_keys_pin_data {
 	const struct device *dev;
 	struct gpio_keys_callback cb_data;
 	struct k_work_delayable work;
-	int8_t pin_state;
 };
 
 struct gpio_keys_config {
