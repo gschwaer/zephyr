@@ -1,0 +1,135 @@
+/*
+ * Copyright (c) 2024, Gero Schwäricke <gero.schwaericke@posteo.de>
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <zephyr/dt-bindings/adc/adc.h>
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+#include <zephyr/dt-bindings/lvgl/lvgl.h>
+
+/* The ESP32 ADC uses an internal reference voltage of ~ 1.1 V. The joystick buttons pull the signal
+ * to 3.3V and 3.3V/2 = 1.65V. To differentiate between them we need to use the maximum attenuation
+ * of 11 dB (ATTEN=3). We crop the values to the range specified in the ESP Hardware Design
+ * Guidelines for ATTEN=3: 150 mV ~ 2450 mV. See
+ * https://docs.espressif.com/projects/esp-hardware-design-guidelines/en/latest/esp32/schematic-checklist.html#adc */
+#define ESP32_ADC_ATTEN_11DB "ADC_GAIN_1_4"
+#define ESP32_ADC_ATTEN_11DB_MIN_MV 150
+#define ESP32_ADC_ATTEN_11DB_MAX_MV 2450
+#define ESP32_ADC_ATTEN_11DB_MV(val_mv) ((val_mv) > ESP32_ADC_ATTEN_11DB_MAX_MV ? ESP32_ADC_ATTEN_11DB_MAX_MV: ((val_mv) < ESP32_ADC_ATTEN_11DB_MIN_MV ? ESP32_ADC_ATTEN_11DB_MIN_MV: (val_mv)))
+
+/ {
+    buttons: gpio_keys {
+        /* It seems there is a hardware bug resulting in lost interrupts. It only happens when the
+         * ADC is enabled. The effect is that the START button on IO39 gets stuck, because the
+         * unpress interrupt is never received. Polling mode circumvents this bug. */
+        polling-mode;
+    };
+
+    lvgl_keypad_input_buttons {
+        compatible = "zephyr,lvgl-keypad-input";
+        input = <&buttons>;
+        input-codes = <
+        INPUT_KEY_MENU
+        INPUT_KEY_0
+        INPUT_BTN_SELECT
+        INPUT_BTN_START
+        INPUT_KEY_A
+        INPUT_KEY_B
+        >;
+        lvgl-codes = <
+        LV_KEY_HOME
+        LV_KEY_END
+        LV_KEY_PREV
+        LV_KEY_NEXT
+        LV_KEY_ENTER
+        LV_KEY_ESC
+        >;
+    };
+
+    joystick_up_down: adc_keys_joystick_up_down {
+        compatible = "adc-keys";
+        io-channels = <&adc0 7>;
+        /* Idle: Weak pull-down */
+        keyup-threshold-mv = <ESP32_ADC_ATTEN_11DB_MV(0)>;
+
+        /* Up: Strong pull-up */
+        up_button {
+            press-thresholds-mv = <ESP32_ADC_ATTEN_11DB_MV(3300)>;
+            zephyr,code = <INPUT_KEY_UP>;
+        };
+
+        /* Down: Weak pull-up (equal to pull-down): 1/2 V */
+        down_button {
+            press-thresholds-mv = <ESP32_ADC_ATTEN_11DB_MV(3300/2)>;
+            zephyr,code = <INPUT_KEY_DOWN>;
+        };
+    };
+
+    lvgl_keypad_input_joystick_up_down {
+        compatible = "zephyr,lvgl-keypad-input";
+        input = <&joystick_up_down>;
+        input-codes = <
+        INPUT_KEY_UP
+        INPUT_KEY_DOWN
+        >;
+        lvgl-codes = <
+        LV_KEY_UP
+        LV_KEY_DOWN
+        >;
+    };
+
+    joystick_left_right: adc_keys_joystick_left_right {
+        compatible = "adc-keys";
+        io-channels = <&adc0 6>;
+        /* Idle: Weak pull-down */
+        keyup-threshold-mv = <ESP32_ADC_ATTEN_11DB_MV(0)>;
+
+        /* Left: Strong pull-up */
+        left_button {
+            press-thresholds-mv = <ESP32_ADC_ATTEN_11DB_MV(3300)>;
+            zephyr,code = <INPUT_KEY_LEFT>;
+        };
+
+        /* Right: Weak pull-up (equal to pull-down): 1/2 V */
+        right_button {
+            press-thresholds-mv = <ESP32_ADC_ATTEN_11DB_MV(3300/2)>;
+            zephyr,code = <INPUT_KEY_RIGHT>;
+        };
+    };
+
+    lvgl_keypad_input_joystick_left_right {
+        compatible = "zephyr,lvgl-keypad-input";
+        input = <&joystick_left_right>;
+        input-codes = <
+        INPUT_KEY_LEFT
+        INPUT_KEY_RIGHT
+        >;
+        lvgl-codes = <
+        LV_KEY_LEFT
+        LV_KEY_RIGHT
+        >;
+    };
+};
+
+&adc0 {
+    status = "okay";
+    #address-cells = <1>;
+    #size-cells = <0>;
+
+    channel@6 {
+        reg = <0x6>;
+        zephyr,gain = ESP32_ADC_ATTEN_11DB;
+        zephyr,reference = "ADC_REF_INTERNAL";
+        zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+        zephyr,resolution = <12>;
+    };
+
+    channel@7 {
+        reg = <0x7>;
+        zephyr,gain = ESP32_ADC_ATTEN_11DB;
+        zephyr,reference = "ADC_REF_INTERNAL";
+        zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+        zephyr,resolution = <12>;
+    };
+};
