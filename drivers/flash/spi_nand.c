@@ -298,7 +298,10 @@ static int spi_nand_wait_until_ready(const struct device *dev, const char *op, u
 	bool expired;
 	int ret;
 
-	timeout = sys_timepoint_calc(K_USEC(timeout_us));
+	/* Time point calculation is ticks based and references the beginning of the current tick,
+	 * which is already partly over. Adding 1 tick to not fall short.
+	 */
+	timeout = sys_timepoint_calc(K_TICKS(k_us_to_ticks_ceil64(timeout_us) + 1));
 	do {
 		/* Determine the expiry status before the read to ensure that this function only
 		 * returns ETIMEDOUT if the flash still isn't ready *after* the provided timeout_us.
